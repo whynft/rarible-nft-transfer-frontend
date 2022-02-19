@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>NFT Transfer</title>
+	<link rel="stylesheet"  href="style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+</head>
+<body>
+	<div id="app">
+		<div class="container">
+			Loading (awaiting MetaMask login)...
+			<header class="header_index">
+				<ul class="header_list list">
+					<li><h2 class="header_name">MultiChain NFT Brige</h2></li>
+					<li>
+						<ul class="user_menu list">
+							<li class="user_menu--item">Transfer NFT</li>
+							<li class="user_menu--item">About</li>
+							<li class="user_menu--item">About</li>
+						</ul>
+					</li>
+					<li>
+						<div class="metamask">
+							<p class="metamask_button">Connect</p>
+						</div>
+					</li>
+				</ul>
+			</header>
+			<main class="main_index">
+				<h1 main_title>Transfer NFT<br>between blockchains</h1>
+				<div class="block  visually-hidden">
+					<div class="chains">
+						<img class="arrow" src="img/arrow.png">
+						<span class="chains_span first-span"><img  class="ellipse" src="img/Ellipse.png" height="38" weight="38">Select chain <img class="vector" src="img/Vector.svg" height="12" weight="20"></span>
+						<ul class="first_chains_list chains_list visually-hidden">
+							<li  class="first-item">
+								<p>Select chain</p>
+								<img class="close" src="img/Outline.png"  height="24" weight="24">
+							</li>
+							<li class="chains_item first_chains_item">
+								<img src="img/ETH.png" height="30" weight="30">
+								<p class="chains_item-p">ETH</p>
+							</li>
+							<li class="chains_item first_chains_item">
+								<img src="img/ETH.png"  height="30" weight="30">
+								<p class="chains_item-p">Ropsten</p>
+							</li>
+							<li class="chains_item first_chains_item">
+								<img src="img/ETH.png"  height="30" weight="30">
+								<p class="chains_item-p">Rinkeby</p>
+							</li>
+							<li class="chains_item first_chains_item">
+								<img src="img/ETH.png"  height="30" weight="30">
+								<p class="chains_item-p">Goerli</p>
+							</li>
+						</ul>
+						<span class="chains_span second-span"><img  class="ellipse" src="img/Ellipse.png" height="38" weight="38"> Select chain <img class="vector" src="img/Vector.svg" height="12" weight="20"></span>
+						<ul class="second_chains_list visually-hidden chains_list">
+							<li  class="second-item">
+								<p>Select chain</p>
+								<img class="second-close" src="img/Outline.png"  height="24" weight="24">
+							</li>
+							<li class="chains_item second_chains_item">
+								<img src="img/ETH.png"  height="30" weight="30">
+								<p  class="chains_item-p">ETH</p>
+							</li>
+							<li class="chains_item second_chains_item">
+								<img src="img/ETH.png"  height="30" weight="30">
+								<p  class="chains_item-p">Ropsten</p>
+							</li>
+							<li class="chains_item second_chains_item">
+								<img src="img/ETH.png"  height="30" weight="30">
+								<p  class="chains_item-p">Rinkeby</p>
+							</li>
+							<li class="chains_item second_chains_item">
+								<img src="img/ETH.png"  height="30" weight="30">
+								<p  class="chains_item-p">Goerli</p>
+							</li>
+						</ul>
+					</div>
+				</div>
+					<form class="form visually-hidden" onsubmit="handleRemember(event)">
+						<label class="visually-hidden" for="nft-link">Ссылка на NFT:</label>
+						<input class="link-input" type="text" name="nft-link" placeholder="Link on your NFT"><br>
+						<button class="metamask_button button" id="btn-send-remember" type="submit">Transfer</button>
+					</form>
+				<div class="block">
+					<form class="approve-form" onsubmit="handleApprove(event)">
+						<div class="chains_span">
+							<p class="name">Nft Contract</p>
+							<p class="value">  </p>
+						</div>
+						<div class="chains_span chains_span_second">
+							<p class="name">Nft Token</p>
+							<p class="value">  </p>
+						</div>
+						<button class="metamask_button button approve-button" id="btn-send-permission" type="submit">Approve</button>
+					</form>
+				</div>
+				<div class="block visually-hidden">
+					<form class="transfer-form" onsubmit="handleTryCrossChainTransfer(event)">
+						<div class="chains_span">
+							<p class="name">Nft Contract</p>
+							<p class="value">  </p>
+						</div>
+						<div class="chains_span chains_span_second">
+							<p class="name">Nft Token</p>
+							<p class="value">  </p>
+						</div>
+						<input class="transfer-input" type="text" name="toChainId" placeholder="Desired Chain ID">
+						<button class="button" id="btn-send-transfer" type="submit">Transfer</button>
+					</form>
+				</div>
+			</main>
+		</div>
+	</div>
+</body>
+</html>
