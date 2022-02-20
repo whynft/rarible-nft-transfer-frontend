@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Frontend Example Contract</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+        height: 100vh;
+        display: grid;
+        font-size: 18px;
+      }
+
+      #app {
+        align-self: center;
+        justify-self: center;
+      }
+
+      .container {
+        width: 300px;
+        background-color: #eee;
+        text-align: center;
+        padding: 27px 18px;
+        margin-bottom: 27px;
+      }
+
+      h1 {
+        margin: 0;
+        padding-bottom: 18px;
+        font-size: 18px;
+      }
+
+      input,
+      button {
+        padding: 9px;
+        font-size: 18px;
+        margin-bottom: 9px;
+      }
+
+      input.full-width {
+        display: block;
+        margin: 0 auto;
+        margin-bottom: 9px;
+        text-align: center;
+      }
+
+      .info {
+        max-width: 21ch;
+        margin: 0 auto;
+        margin-bottom: 18px;
+        background-color: #ddd;
+        padding: 12px 24px;
+        word-wrap: break-word;
+        font-family: "Lucida Console", Monaco, monospace;
+        font-size: 15px;
+      }
+
+      a {
+        color: black;
+      }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.3.4/dist/web3.min.js"></script>
+    <script>
+      function getNftContractToken(link) {
+        console.log(link);
+        const linkElements = link.split("/");
+        const numbers = linkElements[linkElements.length - 1].split(":");
+        const nftToken = numbers[1].split("?")[0];
+        const nftContract = numbers[0];
+        return [nftContract, nftToken]
+      }
+
+      const ethEnabled = async () => {
+        if (window.ethereum) {
+          await window.ethereum.send('eth_requestAccounts');
+          window.web3 = new Web3(window.ethereum);
+          console.log(web3);
+          return true;
+        }
+        return false;
+      }
+
+      const erc721Abi = [{"inputs":[{"internalType":"address","name":"_approved","type":"address"},{"internalType":"uint256","name":"_tokenId","type":"uint256"}],"name":"approve","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"getApproved","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"name":"getRaribleV2Royalties","outputs":[{"components":[{"internalType":"address payable","name":"account","type":"address"},{"internalType":"uint96","name":"value","type":"uint96"}],"internalType":"struct LibPart.Part[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"components":[{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"string","name":"tokenURI","type":"string"},{"components":[{"internalType":"address payable","name":"account","type":"address"},{"internalType":"uint96","name":"value","type":"uint96"}],"internalType":"struct LibPart.Part[]","name":"creators","type":"tuple[]"},{"components":[{"internalType":"address payable","name":"account","type":"address"},{"internalType":"uint96","name":"value","type":"uint96"}],"internalType":"struct LibPart.Part[]","name":"royalties","type":"tuple[]"},{"internalType":"bytes[]","name":"signatures","type":"bytes[]"}],"internalType":"struct LibERC721LazyMint.Mint721Data","name":"data","type":"tuple"},{"internalType":"address","name":"to","type":"address"}],"name":"mintAndTransfer","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_tokenId","type":"uint256"}],"name":"ownerOf","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_tokenId","type":"uint256"}],"name":"tokenURI","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_from","type":"address"},{"internalType":"address","name":"_to","type":"address"},{"internalType":"uint256","name":"_tokenId","type":"uint256"}],"name":"transferFrom","outputs":[],"stateMutability":"nonpayable","type":"function"}]
+      const erc721TransferAbi = [{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"toChain","type":"uint256"},{"indexed":true,"internalType":"address","name":"nftContract","type":"address"},{"indexed":false,"internalType":"uint256","name":"nftToken","type":"uint256"},{"indexed":false,"internalType":"address","name":"nftOwner","type":"address"},{"indexed":false,"internalType":"string","name":"nftURI","type":"string"},{"components":[{"internalType":"address payable","name":"account","type":"address"},{"internalType":"uint96","name":"value","type":"uint96"}],"indexed":false,"internalType":"struct LibPart.Part[]","name":"raribleRoyalties","type":"tuple[]"}],"name":"TryCrossChainTransfer","type":"event"},{"inputs":[{"internalType":"uint256","name":"_toChainId","type":"uint256"},{"internalType":"address","name":"_nftContract","type":"address"},{"internalType":"uint256","name":"_nftToken","type":"uint256"}],"name":"tryCrossChainTransfer","outputs":[],"stateMutability":"nonpayable","type":"function"}]
+      const erc721TransferAddress = "0x65aAfb68470c570867E7F73d5461889d275f97c9";
+
+      let nftContractGlobal = '';
+      let nftTokenGlobal = '';
+
+      const render = async () => {
+        const isLoggedIn = await ethEnabled();
+        console.log('logged in ');
+        console.log(isLoggedIn);
+        /* Show login form if user is not logged in */
+        let authHtml = `
+          <div class="container">
+            <h1>Please login with meta mask</h1>
+          </div>
+        `;
+        let userHtml = "";
+        let approveHtml = "";
+        let tryCrossChainTransferHtml = "";
+        let memoryBlockHtml = "";
+        const target = document.querySelector("#app");
+        if (isLoggedIn) {
+
+          const network = await window.web3.eth.net.getNetworkType();
+          console.log('current network', network);
+          const userAddress = (await window.web3.eth.getAccounts())[0];
+          const userBalance = window.web3.utils.fromWei(
+            await window.web3.eth.getBalance(userAddress) // Balance is in wei
+          );
+
+          // event listner initiated todo: to better
+          const transferContractEventListner = new window.web3.eth.Contract(
+              erc721TransferAbi,
+              erc721TransferAddress
+          );
+          transferContractEventListner.events.TryCrossChainTransfer({})
+          .on("data", async function(event) {
+            console.log('event')
+            console.log(event.returnValues);
+            console.log(event.returnValues.nftContract);
+            console.log(event.returnValues.nftToken);
+            console.log(event.returnValues.nftOwner);
+            console.log(event.returnValues.toChain);
+          })
+          .on("error", console.error)
+          console.log("listner inited...")
+          // event listner now is running and ready to receive event data
+
+          authHtml = `
+            <div class="container">
+              <h1>Logout</h1>
+              <div class="info">To logout/relogin use your MetamaskApp and refresh the page.</div>
+              <button disabled onclick="handleLogout()">Logout</button>
+            </div>
+          `;
+          userHtml = `
+            <div class="container">
+              <h1>Frontend Example of Rarible NFT (RARI) Cross Chain Transfer</h1>
+              <div class="info">
+                <a href="https://testnet.bscscan.com/address/${userAddress}" target="_blank">${userAddress}</a>
+              </div>
+              <h1>Network</h1>
+              <div class="info">${network}</div>
+              <h1>Balance</h1>
+              <div class="info">${userBalance} ETH</div>
+            </div>
+          `;
+          memoryBlockHtml = `
+            <div class="container">
+              <h1>0. Convenience Block</h1>
+              <div class="info">Use the block for convenience in the flow below: we will parse Rarible link for you on collection address and NFT id.</div>
+              <div class="info">Thus, by submitting you do not need to fill the values below again and again for each blocks.</div>
+              <form onsubmit="handleRemember(event)">
+                <input type="text" name="rarible_link" class="full-width" required="required" placeholder="Rarible Link"/>
+                <button id="btn-send-remember" type="submit">Remember & Insert</button>
+              </form>
+            </div>
+          `;
+          approveHtml = `
+            <div class="container">
+              <h1>1. Approve NFT</h1>
+              <div class="info">Add the permission to the NFT contract (and only to the one) to call a transfer method for the NFT.</div>
+              <form onsubmit="handleApprove(event)">
+                <input type="text" name="nft_contract" class="full-width" required="required" placeholder="Nft Contract" value="${nftContractGlobal}"/>
+                <input type="text" name="nft_token" class="full-width" required="required" placeholder="Nft Token" value="${nftTokenGlobal}"/>
+
+                <button id="btn-send-permission" type="submit">Approve</button>
+              </form>
+            </div>
+          `;
+          tryCrossChainTransferHtml = `
+            <div class="container">
+              <h1>2. Transfer NFT</h1>
+              <div class="info">By this operation you burn your NFT in the current chain - no one have access to the nft anymore.</div>
+              <div class="info">And this event emits signal for oracles to create the NFT in passed chain.</div>
+              <form onsubmit="handleTryCrossChainTransfer(event)">
+                <input type="text" name="nftContract" class="full-width" required="required" placeholder="Nft Contract" value="${nftContractGlobal}"/>
+                <input type="text" name="nftToken" class="full-width" required="required" placeholder="Nft Token" value="${nftTokenGlobal}"/>
+                <input type="text" name="toChainId" class="full-width" required="required" placeholder="Desired Chain Id" />
+
+                <button id="btn-send-transfer" type="submit">Transfer</button>
+              </form>
+            </div>
+          `;
+        }
+        target.innerHTML =
+          authHtml + userHtml + memoryBlockHtml + approveHtml + tryCrossChainTransferHtml;
+      };
+
+      const handleRemember = async (e) => {
+        e.preventDefault();
+        const raribleLink = new FormData(e.target).get("rarible_link");
+        if (raribleLink) {
+          const values = getNftContractToken(raribleLink);
+          nftContractGlobal = values[0];
+          nftTokenGlobal = values[1];
+
+          console.log('remember values to global JS params for convenience...');
+          render();
+        }
+      };
+
+      const handleTryCrossChainTransfer = async (e) => {
+        e.preventDefault();
+        const nftContract = new FormData(e.target).get("nftContract");
+        const nftToken = new FormData(e.target).get("nftToken");
+
+        const toChainId = new FormData(e.target).get("toChainId");  // int for chain, e.g. rinkeby: 4
+
+        if (nftContract && nftToken && toChainId) {
+          const btnSendTxn = document.getElementById("btn-send-transfer");
+          btnSendTxn.disabled = true;
+          btnSendTxn.innerText = "Transferring...";
+          console.log('send contract', nftContract)
+          console.log('send token', nftToken)
+          console.log('send chain', toChainId)
+
+          const userAddress = (await window.web3.eth.getAccounts())[0];
+          let transferContract = new window.web3.eth.Contract(
+              erc721TransferAbi,
+              erc721TransferAddress
+          );
+
+          const result = await transferContract.methods
+            .tryCrossChainTransfer(toChainId, nftContract, nftToken)  // todo: sign
+            .send({
+              // value: '10000000000000000',  // todo
+              from: userAddress,
+              gas: 1500000,
+              gasPrice: '30000000000'})  // todo
+          console.log("result of transferring: ", result);
+          render();
+        }
+      };
+
+      const handleApprove = async (e) => {
+        e.preventDefault();
+        const nft_contract = new FormData(e.target).get("nft_contract");
+        const nft_token = new FormData(e.target).get("nft_token");
+        if (nft_contract && nft_token) {
+          const btnSendTxn = document.getElementById("btn-send-permission");
+          btnSendTxn.disabled = true;
+          btnSendTxn.innerText = "Approving...";
+
+          const userAddress = (await window.web3.eth.getAccounts())[0];
+
+          let contract = new window.web3.eth.Contract(
+              erc721Abi,
+              nft_contract
+          );
+          const result = await contract.methods
+            .approve(erc721TransferAddress, nft_token)
+            .send({
+              from: userAddress,
+              gas: 1500000,
+              gasPrice: '30000000000'});  // todo
+          console.log("result of approve: ", result);
+          render();
+        }
+      };
+
+      const handleLogout = async () => {
+        render();
+      };
+    </script>
+  </head>
+
+  <body onload="render()">
+    <div id="app">
+      <div class="container">Loading (awaiting MetaMask login)...</div>
+    </div>
+  </body>
+
+</html>
