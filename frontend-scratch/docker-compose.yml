@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  web:
+    build: src
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./src/:/opt/
+    ports:
+      - $DOCKER_WEB_PORT:8000
+    env_file:
+      - ./.env
